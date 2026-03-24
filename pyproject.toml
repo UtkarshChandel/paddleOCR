@@ -1,0 +1,14 @@
+[project]
+name = "annual-report-parser"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Parse annual reports using PaddleOCR"
+dependencies = [
+    "paddleocr",
+    "paddlex",
+    "pymupdf",
+    "openpyxl",
+]
+
+[tool.uv.sources]
+paddlepaddle = { url = "https://www.paddlepaddle.org.cn/packages/stable/cpu/" }
