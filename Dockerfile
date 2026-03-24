@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 WORKDIR /app
 
@@ -12,13 +12,15 @@ RUN apt-get update && apt-get install -y \
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python && \
     ln -sf /usr/bin/pip3 /usr/bin/pip
 
+# ✅ Correct version + correct index URL for CUDA 11.8
 RUN pip install --no-cache-dir \
-    paddlepaddle-gpu==2.6.2.post120 \
-    -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+    paddlepaddle-gpu==3.0.0 \
+    -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download models at build time
 RUN python -c "from paddleocr import PaddleOCRVL; PaddleOCRVL()"
 RUN python -c "from paddlex import create_pipeline; create_pipeline(pipeline='table_recognition_v2')"
 
