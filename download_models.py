@@ -1,4 +1,3 @@
-# download_models.py
 import os
 from pathlib import Path
 
