@@ -1,28 +1,13 @@
 import fitz
 from pathlib import Path
-from paddleocr import PaddleOCRVL
-from paddlex import create_pipeline
 
 
-def process_annual_report(pdf_path: str, out_dir: str = "/tmp/output", max_pages: int = None) -> dict:
-    """
-    Process an annual report PDF: extract markdown and tables.
-
-    Args:
-        pdf_path: Path to the PDF file
-        out_dir: Directory to save output files
-        max_pages: Maximum number of pages to process (None for all)
-
-    Returns:
-        Dictionary with markdown content, xlsx file paths, and stem
-    """
+def process_annual_report(pdf_path, out_dir="/tmp/output", max_pages=None, vl=None, table_pipeline=None):
     pdf = Path(pdf_path)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     stem = pdf.stem
 
-    # ── Step 1: Full document → Markdown ──────────────────────
-    vl = PaddleOCRVL()
     pages = list(vl.predict(input=str(pdf)))
     pages = pages[:max_pages] if max_pages else pages
 
@@ -33,17 +18,15 @@ def process_annual_report(pdf_path: str, out_dir: str = "/tmp/output", max_pages
         concatenate_pages=True,
     )
 
-    markdown_content = None
     for res in structured:
         res.save_to_markdown(save_path=str(out))
         res.save_to_json(save_path=str(out))
 
+    markdown_content = None
     md_file = out / f"{stem}.md"
     if md_file.exists():
         markdown_content = md_file.read_text(encoding="utf-8")
 
-    # ── Step 2: Tables → XLSX (per page) ───────────────────────
-    table_pipeline = create_pipeline(pipeline="table_recognition_v2")
     doc = fitz.open(str(pdf))
     total_pages = len(doc)
     page_limit = min(max_pages, total_pages) if max_pages else total_pages
@@ -63,8 +46,4 @@ def process_annual_report(pdf_path: str, out_dir: str = "/tmp/output", max_pages
             res.save_to_xlsx(xlsx_out)
             xlsx_paths.append(xlsx_out)
 
-    return {
-        "markdown": markdown_content,
-        "xlsx_files": xlsx_paths,
-        "stem": stem,
-    }
+    return {"markdown": markdown_content, "xlsx_files": xlsx_paths, "stem": stem}

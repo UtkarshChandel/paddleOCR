@@ -3,41 +3,26 @@ import requests
 import tempfile
 import os
 import base64
-from processor import process_annual_report
+from paddleocr import PaddleOCRVL
+from paddlex import create_pipeline
+
+# ✅ Initialize once at startup — runs on RunPod where GPU exists
+print("Loading PaddleOCR models...")
+vl = PaddleOCRVL()
+table_pipeline = create_pipeline(pipeline="table_recognition_v2")
+print("Models loaded ✅")
 
 
 def handler(job):
-    """
-    RunPod serverless handler for processing annual report PDFs.
-
-    Input format:
-    {
-        "pdf_url": "https://..." (required) - URL to download the PDF
-        "max_pages": 5 (optional) - Maximum pages to process
-        "return_xlsx": false (optional) - Whether to return xlsx files as base64
-    }
-
-    Output format:
-    {
-        "markdown": "# Document content...",
-        "stem": "filename",
-        "xlsx_count": 3,
-        "xlsx_b64": { (if return_xlsx is true)
-            "filename_page1_tables.xlsx": "base64encoded...",
-            ...
-        }
-    }
-    """
     job_input = job["input"]
 
-    pdf_url = job_input.get("pdf_url")           # Azure Blob SAS URL or any PDF URL
+    pdf_url = job_input.get("pdf_url")
     max_pages = job_input.get("max_pages", None)
     return_xlsx_b64 = job_input.get("return_xlsx", False)
 
     if not pdf_url:
         return {"error": "Missing required field: pdf_url"}
 
-    # Download PDF to temp file
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         response = requests.get(pdf_url, timeout=60)
         response.raise_for_status()
@@ -45,10 +30,13 @@ def handler(job):
         tmp_path = tmp.name
 
     try:
+        from processor import process_annual_report
         result = process_annual_report(
             pdf_path=tmp_path,
             out_dir="/tmp/output",
             max_pages=max_pages,
+            vl=vl,                        # ← pass pre-loaded models
+            table_pipeline=table_pipeline, # ← pass pre-loaded models
         )
 
         output = {
@@ -57,7 +45,6 @@ def handler(job):
             "xlsx_count": len(result["xlsx_files"]),
         }
 
-        # Optionally encode xlsx files as base64 to return inline
         if return_xlsx_b64:
             xlsx_encoded = {}
             for path in result["xlsx_files"]:
