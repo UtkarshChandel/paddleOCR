@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.2-cudnn-runtime-ubuntu22.04
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install PaddlePaddle 3.3.1 from Baidu index (has fused_rms_norm_ext)
 RUN pip install paddlepaddle-gpu==3.3.1 \
-    -i https://www.paddlepaddle.org.cn/packages/stable/cu126/ \
+    -i https://www.paddlepaddle.org.cn/packages/stable/cu124/ \
     --no-cache-dir
 
 COPY requirements.txt .
