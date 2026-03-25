@@ -1,12 +1,33 @@
+# handler.py
 import runpod
 import requests
 import tempfile
 import os
 import base64
+from pathlib import Path
+
+# ── Model cache check (no-op if already downloaded) ──────────────────────────
+_MODEL_DIR = Path(os.environ.get("PADDLEX_HOME", "/root/.paddlex")) / "official_models"
+
+def _ensure_models():
+    vl_ready    = (_MODEL_DIR / "PaddleOCR-VL-1.5").exists()
+    table_ready = (_MODEL_DIR / "PP-TableFormer").exists()
+    if vl_ready and table_ready:
+        print("Models already cached ✅")
+        return
+    print("First cold start — downloading models (will be cached to network volume)...")
+    from paddleocr import PaddleOCRVL as _VL
+    from paddlex import create_pipeline as _cp
+    _VL()
+    _cp(pipeline="table_recognition_v2")
+    print("Models cached ✅")
+
+_ensure_models()
+# ─────────────────────────────────────────────────────────────────────────────
+
 from paddleocr import PaddleOCRVL
 from paddlex import create_pipeline
 
-# ✅ Initialize once at startup — runs on RunPod where GPU exists
 print("Loading PaddleOCR models...")
 vl = PaddleOCRVL()
 table_pipeline = create_pipeline(pipeline="table_recognition_v2")
@@ -35,8 +56,8 @@ def handler(job):
             pdf_path=tmp_path,
             out_dir="/tmp/output",
             max_pages=max_pages,
-            vl=vl,                        # ← pass pre-loaded models
-            table_pipeline=table_pipeline, # ← pass pre-loaded models
+            vl=vl,
+            table_pipeline=table_pipeline,
         )
 
         output = {
