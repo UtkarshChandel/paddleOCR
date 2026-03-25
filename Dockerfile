@@ -16,7 +16,8 @@ RUN pip install paddlepaddle-gpu==3.3.1 \
     --no-cache-dir
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir "paddlex[ocr]" -r requirements.txt
+RUN pip install --no-cache-dir "paddlex[ocr]" && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY handler.py processor.py download_models.py ./
 
