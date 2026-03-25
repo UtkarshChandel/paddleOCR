@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.0.1-cudnn8-runtime-ubuntu22.04
 
 WORKDIR /app
 
@@ -12,14 +12,13 @@ RUN apt-get update && apt-get install -y \
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python && \
     ln -sf /usr/bin/pip3 /usr/bin/pip
 
+# ✅ cu120 to match RTX 4090 on RunPod
 RUN pip install --no-cache-dir \
     paddlepaddle-gpu==3.0.0 \
-    -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
+    -i https://www.paddlepaddle.org.cn/packages/stable/cu120/
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# ❌ Removed model pre-download lines — they need a real GPU
 
 COPY handler.py processor.py ./
 
