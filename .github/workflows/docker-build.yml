@@ -30,6 +30,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: macroni/paddle-ocr-worker:latest
+          tags: |
+            macroni/paddle-ocr-worker:latest
+            macroni/paddle-ocr-worker:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
