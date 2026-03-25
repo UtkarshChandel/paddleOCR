@@ -1,5 +1,3 @@
-paddleocr
-paddlex
 PyMuPDF
 runpod
 requests

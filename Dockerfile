@@ -16,8 +16,11 @@ RUN pip install paddlepaddle-gpu==3.3.1 \
     --no-cache-dir
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir "paddlex[ocr]" && \
-    pip install --no-cache-dir -r requirements.txt
+# Install heavy ML deps first
+RUN pip install --no-cache-dir "paddlex[ocr]" -r requirements.txt
+
+# Explicitly install runpod separately to guarantee it's present
+RUN pip install --no-cache-dir runpod
 
 COPY handler.py processor.py download_models.py ./
 
